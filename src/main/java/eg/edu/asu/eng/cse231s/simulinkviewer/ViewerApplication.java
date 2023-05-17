@@ -30,6 +30,6 @@ public class ViewerApplication extends Application {
 
     /* Reads XML file and extracts all of its elements into a NodeList */
     public static NodeList parseXML(String XMLPath) {
-
+        // TODO: Issue #3
     }
 }
