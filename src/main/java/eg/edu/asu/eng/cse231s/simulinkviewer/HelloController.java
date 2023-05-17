@@ -1,4 +1,4 @@
-package com.example.simulinkviewer;
+package eg.edu.asu.eng.cse231s.simulinkviewer;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
