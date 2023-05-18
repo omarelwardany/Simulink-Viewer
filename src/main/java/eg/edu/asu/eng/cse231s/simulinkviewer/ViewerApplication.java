@@ -20,12 +20,14 @@ public class ViewerApplication extends Application {
     @Override
     public void start(Stage stage) {
         // required declarations before initial scene event handler
+        Pane drawingPane = new StackPane();
         File XMLFile;
         NodeList blockNodes;
         NodeList lineNodes;
         List<Element> blocks;
         List<Element> lines;
         String mdlPath;
+        ArrayList<Rectangle> rectangles = new ArrayList<>();
 
         /* TODO: Scene  (Issue #2)
         *   Textbox and button to get file path, then save it to a String called mdlPath*/
@@ -44,13 +46,7 @@ public class ViewerApplication extends Application {
         for (int i = 0; i < lineNodes.getLength(); i++) {
             lines.add((Element) lineNodes.item(i)); // adds lines to ArrayList<Elements>
         }
-
-        /* TODO: Scene
-        *   for each block, get dimensions and position, then add to scene
-        *   for each line, get source point and destination point, then add to scene*/
-        Pane drawingPane = new StackPane();
-        ArrayList<Rectangle> rectangles = new ArrayList<>();
-        // add Blocks to the scene
+        // add Blocks to the pane
         for (Element block: blocks) {
             Rectangle rectangle = new Rectangle();
             String position = block.getElementsByTagName("Position").item(0).getTextContent();
@@ -66,13 +62,22 @@ public class ViewerApplication extends Application {
             blockText.setX(getXFromPosition(position));
             blockText.setY(getYFromPosition(position));
         }
-        int loopCounter = 0;
+        // add Lines to the pane
         for (Element lineElement: lines) {
             Line line = new Line();
-            // TODO
-
-            loopCounter++;
+            int srcBlockID = Integer.parseInt(lineElement.getElementsByTagName("Src").item(0).getTextContent().split("#")[0]);
+            int dstBlockID = Integer.parseInt(lineElement.getElementsByTagName("Dst").item(0).getTextContent().split("#")[0]);
+            line.setStartX(rectangles.get(srcBlockID).getX());
+            line.setStartY(rectangles.get(srcBlockID).getY());
+            line.setEndX(rectangles.get(dstBlockID).getX());
+            line.setEndY(rectangles.get(dstBlockID).getY());
+            drawingPane.getChildren().add(line);
         }
+
+        /* TODO: Scene
+         *   for each block, get dimensions and position, then add to scene
+         *   for each line, get source point and destination point, then add to scene*/
+
     }
 
     public static void main(String[] args) { launch(); }
