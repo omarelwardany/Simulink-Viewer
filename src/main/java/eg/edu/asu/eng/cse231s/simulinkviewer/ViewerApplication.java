@@ -14,16 +14,25 @@ import java.util.List;
 public class ViewerApplication extends Application {
     @Override
     public void start(Stage stage) {
+        // required declarations before initial scene event handler
+        File XMLFile;
+        NodeList blockNodes;
+        NodeList lineNodes;
+        List<Element> blocks;
+        List<Element> lines;
+        String mdlPath;
+
         /* TODO: Scene  (Issue #2)
         *   Textbox and button to get file path, then save it to a String called mdlPath*/
-        String mdlPath = /* Test path */ "C:\\Users\\OmarEmadSayedEl-Ward\\Desktop\\Example.mdl";
 
-        // converts the mdl file to an ArrayList of blocks and an ArrayList for lines to be drawn
-        File XMLFile = extractXML(mdlPath);
-        NodeList blockNodes = blocksFromXML(XMLFile);
-        NodeList lineNodes = linesFromXML(XMLFile);
-        List<Element> blocks = new ArrayList<>();
-        List<Element> lines = new ArrayList<>();
+        /* this block of code converts the mdl file to an ArrayList of blocks and an ArrayList for lines to be drawn
+           it should be placed inside the initial scene's button event handler */
+        mdlPath = /* Test path */ "C:\\Users\\OmarEmadSayedEl-Ward\\Desktop\\Example.mdl";
+        XMLFile = extractXML(mdlPath);
+        blockNodes = blocksFromXML(XMLFile);
+        lineNodes = linesFromXML(XMLFile);
+        blocks = new ArrayList<>();
+        lines = new ArrayList<>();
         for (int i = 0; i < blockNodes.getLength(); i++) {
             blocks.add((Element) blockNodes.item(i));
         }
@@ -34,7 +43,6 @@ public class ViewerApplication extends Application {
         /* TODO: Scene
         *   for each block, get dimensions and position, then add to scene
         *   for each line, get source point and destination point, then add to scene*/
-
     }
 
     public static void main(String[] args) { launch(); }
