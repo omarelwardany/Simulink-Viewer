@@ -46,7 +46,7 @@ public class ViewerApplication extends Application {
         for (int i = 0; i < lineNodes.getLength(); i++) {
             lines.add((Element) lineNodes.item(i)); // adds lines to ArrayList<Elements>
         }
-        // add Blocks to the pane
+        // add Blocks to the drawingPane
         for (Element block: blocks) {
             Rectangle rectangle = new Rectangle();
             String position = block.getElementsByTagName("Position").item(0).getTextContent();
@@ -62,7 +62,7 @@ public class ViewerApplication extends Application {
             blockText.setX(getXFromPosition(position));
             blockText.setY(getYFromPosition(position));
         }
-        // add Lines to the pane
+        // add Lines to the drawingPane
         for (Element lineElement: lines) {
             Line line = new Line();
             int srcBlockID = Integer.parseInt(lineElement.getElementsByTagName("Src").item(0).getTextContent().split("#")[0]);
@@ -98,18 +98,22 @@ public class ViewerApplication extends Application {
         // TODO: Issue #4
     }
 
+    /* Takes String like "[1040, 283, 1075, 317]" and returns X value of the rectangle as a double*/
     public static double getXFromPosition(String position) {
         // TODO: Implement
     }
 
+    /* Takes String like "[1040, 283, 1075, 317]" and returns Y value of the rectangle as a double*/
     public static double getYFromPosition(String position) {
         // TODO: Implement
     }
 
+    /* Takes String like "[1040, 283, 1075, 317]" and returns Width value of the rectangle as a double*/
     public static double getWidthFromPosition(String position) {
         // TODO: Implement
     }
 
+    /* Takes String like "[1040, 283, 1075, 317]" and returns Height value of the rectangle as a double*/
     public static double getHeightFromPosition(String position) {
         // TODO: Implement
     }
