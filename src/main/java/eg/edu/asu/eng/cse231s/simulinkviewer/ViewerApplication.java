@@ -1,6 +1,11 @@
 package eg.edu.asu.eng.cse231s.simulinkviewer;
 
 import javafx.application.Application;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.StackPane;
+import javafx.scene.shape.Line;
+import javafx.scene.shape.Rectangle;
+import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
 import org.w3c.dom.Element;
@@ -34,15 +39,40 @@ public class ViewerApplication extends Application {
         blocks = new ArrayList<>();
         lines = new ArrayList<>();
         for (int i = 0; i < blockNodes.getLength(); i++) {
-            blocks.add((Element) blockNodes.item(i));
+            blocks.add(Integer.parseInt(((Element)blockNodes.item(i)).getAttribute("SID")),(Element) blockNodes.item(i)); // adds blocks to ArrayList<Elements>, sorted by SID
         }
         for (int i = 0; i < lineNodes.getLength(); i++) {
-            lines.add((Element) lineNodes.item(i));
+            lines.add((Element) lineNodes.item(i)); // adds lines to ArrayList<Elements>
         }
 
         /* TODO: Scene
         *   for each block, get dimensions and position, then add to scene
         *   for each line, get source point and destination point, then add to scene*/
+        Pane drawingPane = new StackPane();
+        ArrayList<Rectangle> rectangles = new ArrayList<>();
+        // add Blocks to the scene
+        for (Element block: blocks) {
+            Rectangle rectangle = new Rectangle();
+            String position = block.getElementsByTagName("Position").item(0).getTextContent();
+            rectangle.setX(getXFromPosition(position));
+            rectangle.setY(getYFromPosition(position));
+            rectangle.setHeight(getHeightFromPosition(position));
+            rectangle.setWidth(getWidthFromPosition(position));
+            rectangles.add(rectangle);
+            drawingPane.getChildren().add(rectangle);
+
+            Text blockText = new Text();
+            blockText.setText(block.getTagName());
+            blockText.setX(getXFromPosition(position));
+            blockText.setY(getYFromPosition(position));
+        }
+        int loopCounter = 0;
+        for (Element lineElement: lines) {
+            Line line = new Line();
+            // TODO
+
+            loopCounter++;
+        }
     }
 
     public static void main(String[] args) { launch(); }
@@ -63,4 +93,19 @@ public class ViewerApplication extends Application {
         // TODO: Issue #4
     }
 
+    public static double getXFromPosition(String position) {
+        // TODO: Implement
+    }
+
+    public static double getYFromPosition(String position) {
+        // TODO: Implement
+    }
+
+    public static double getWidthFromPosition(String position) {
+        // TODO: Implement
+    }
+
+    public static double getHeightFromPosition(String position) {
+        // TODO: Implement
+    }
 }
