@@ -3,7 +3,6 @@ package eg.edu.asu.eng.cse231s.simulinkviewer;
 import javafx.application.Application;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
-import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
@@ -49,7 +48,13 @@ public class ViewerApplication extends Application {
         // add Blocks to the drawingPane
         for (Element block: blocks) {
             Rectangle rectangle = new Rectangle();
-            String position = block.getElementsByTagName("Position").item(0).getTextContent();
+            NodeList blockChildNodes = block.getChildNodes();
+            String position = "";
+            for (int i = 0; i < blockChildNodes.getLength(); i++) {
+                if (((Element) blockChildNodes.item(i)).hasAttribute("Position")) {
+                    position = blockChildNodes.item(i).getTextContent();
+                }
+            }
             rectangle.setX(getXFromPosition(position));
             rectangle.setY(getYFromPosition(position));
             rectangle.setHeight(getHeightFromPosition(position));
@@ -63,15 +68,47 @@ public class ViewerApplication extends Application {
             blockText.setY(getYFromPosition(position));
         }
         // add Lines to the drawingPane
+        // iterate over line elements
         for (Element lineElement: lines) {
-            Line line = new Line();
-            int srcBlockID = Integer.parseInt(lineElement.getElementsByTagName("Src").item(0).getTextContent().split("#")[0]);
-            int dstBlockID = Integer.parseInt(lineElement.getElementsByTagName("Dst").item(0).getTextContent().split("#")[0]);
-            line.setStartX(rectangles.get(srcBlockID).getX());
-            line.setStartY(rectangles.get(srcBlockID).getY());
-            line.setEndX(rectangles.get(dstBlockID).getX());
-            line.setEndY(rectangles.get(dstBlockID).getY());
-            drawingPane.getChildren().add(line);
+            int SrcID;
+            int startXDir = 1; // initial direction is positive x (1) or negative x (0) TODO
+            // iterate over the child nodes of the line
+            for (int i = 0; i < lineElement.getChildNodes().getLength(); i++) {
+                // Find Points element
+                Element currentChild = (Element) lineElement.getChildNodes().item(i);
+                if (currentChild.getAttribute("Name").equals("Points")) {
+                    if (getPointsFromString(currentChild.getTextContent())[0].getX() >= 0)
+                        startXDir = 1;
+                    else startXDir = 0;
+                    break;
+                }
+            }
+            // iterate over the child nodes of the line
+            for (int i = 0; i < lineElement.getChildNodes().getLength(); i++) {
+
+                Point Src = new Point();
+                // in case the Node is a P node
+                if (((Element) lineElement.getChildNodes().item(i)).getTagName().equals("P")) {
+                    Element currentP = (Element) lineElement.getChildNodes().item(i);
+
+                    // in case the node is Src
+                    if (currentP.getAttribute("Name").equals("Src")) {
+                        SrcID = Integer.parseInt(currentP.getTextContent().split("#")[0]);
+                        Src.setX(rectangles.get(SrcID).getX() + startXDir * rectangles.get(SrcID).getHeight());
+                        Src.setY(rectangles.get(SrcID).getY() + 0.5 * rectangles.get(SrcID).getHeight());
+                    }
+                    boolean hasPointsFlag = false;
+                    // in case the node is Points
+                    // TODO OMAR: handle points and handle their absence
+
+                    // in case the node is Dst
+                }
+
+                // in case the Node is a Branch node
+                if (((Element) lineElement.getChildNodes().item(i)).getTagName().equals("Branch")) {
+
+                }
+            }
         }
 
         /* TODO: Scene
@@ -116,5 +153,53 @@ public class ViewerApplication extends Application {
     /* Takes String like "[1040, 283, 1075, 317]" and returns Height value of the rectangle as a double*/
     public static double getHeightFromPosition(String position) {
         // TODO: Implement
+    }
+
+    public static Point[] getPointsFromString(String pointsString) {
+        Point[] points;
+        String[] numbers;
+        pointsString = pointsString.replace('[', ' ');
+        pointsString = pointsString.replace(']', ' ');
+        pointsString = pointsString.trim();
+        numbers = pointsString.split(", ");
+        points = new Point[numbers.length / 2];
+
+        for (int i = 0, j = 0; i < numbers.length; j++) {
+            points[j].setX(Double.parseDouble(numbers[i]));
+            i++;
+            points[j].setY(Double.parseDouble(numbers[i]));
+            i++;
+        }
+        return points;
+    }
+}
+
+class Point {
+    private double x;
+    private double y;
+
+    public Point(double x, double y) {
+        this.x = x;
+        this.y = y;
+    }
+
+    public Point() {
+        this(0,0);
+    }
+
+    public double getX() {
+        return x;
+    }
+
+    public void setX(double x) {
+        this.x = x;
+    }
+
+    public double getY() {
+        return y;
+    }
+
+    public void setY(double y) {
+        this.y = y;
     }
 }
