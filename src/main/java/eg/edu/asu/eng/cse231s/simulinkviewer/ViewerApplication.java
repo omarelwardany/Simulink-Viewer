@@ -3,6 +3,7 @@ package eg.edu.asu.eng.cse231s.simulinkviewer;
 import javafx.application.Application;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
+import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
@@ -66,6 +67,7 @@ public class ViewerApplication extends Application {
             blockText.setText(block.getTagName());
             blockText.setX(getXFromPosition(position));
             blockText.setY(getYFromPosition(position));
+            drawingPane.getChildren().add(blockText);
         }
         // add Lines to the drawingPane
         // iterate over line elements
@@ -83,6 +85,7 @@ public class ViewerApplication extends Application {
                     break;
                 }
             }
+            boolean hasPointsFlag = false;
             // iterate over the child nodes of the line
             for (int i = 0; i < lineElement.getChildNodes().getLength(); i++) {
 
@@ -97,9 +100,29 @@ public class ViewerApplication extends Application {
                         Src.setX(rectangles.get(SrcID).getX() + startXDir * rectangles.get(SrcID).getHeight());
                         Src.setY(rectangles.get(SrcID).getY() + 0.5 * rectangles.get(SrcID).getHeight());
                     }
-                    boolean hasPointsFlag = false;
                     // in case the node is Points
-                    // TODO OMAR: handle points and handle their absence
+
+                    if (currentP.getAttribute("Name").equals("Points")) {
+                        hasPointsFlag = true;
+                        Point[] points = getPointsFromString(currentP.getTextContent());
+                        Line initialLine = new Line();
+                        Point ptCursor = new Point(Src.getX(), Src.getY());
+                        initialLine.setStartX(ptCursor.getX());
+                        initialLine.setStartY(ptCursor.getY());
+                        ptCursor = ptCursor.add(points[0]);
+                        initialLine.setEndX(ptCursor.getX());
+                        initialLine.setEndY(ptCursor.getY());
+                        drawingPane.getChildren().add(initialLine);
+                        for (int j = 1; j < points.length; j++) {
+                            Line midLine = new Line();
+                            midLine.setStartX(ptCursor.getX());
+                            midLine.setStartY(ptCursor.getX());
+                            ptCursor = ptCursor.add(points[j]);
+                            midLine.setEndX(points[j].getX());
+                            midLine.setEndY(points[j].getY());
+                            drawingPane.getChildren().add(midLine);
+                        }
+                    }
 
                     // in case the node is Dst
                 }
@@ -201,5 +224,11 @@ class Point {
 
     public void setY(double y) {
         this.y = y;
+    }
+
+    public Point add(Point other) {
+        double newX = this.x + other.x;
+        double newY = this.y + other.y;
+        return new Point(newX, newY);
     }
 }
