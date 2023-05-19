@@ -1,6 +1,7 @@
 package eg.edu.asu.eng.cse231s.simulinkviewer;
 
 import javafx.application.Application;
+import javafx.scene.Scene;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.shape.Line;
@@ -9,9 +10,14 @@ import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
+import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -53,38 +59,50 @@ public class ViewerApplication extends Application {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        blockNodes = blocksFromXML(XMLFile);
-        lineNodes = linesFromXML(XMLFile);
+        blockNodes = elementsFromXML(XMLFile, "Block");
+        lineNodes = elementsFromXML(XMLFile, "Line");
         blocks = new ArrayList<>();
-        lines = new ArrayList<>();
-        for (int i = 0; i < blockNodes.getLength(); i++) {
-            blocks.add(Integer.parseInt(((Element)blockNodes.item(i)).getAttribute("SID")),(Element) blockNodes.item(i)); // adds blocks to ArrayList<Elements>, sorted by SID
+        for (int i = 0; i < 50; i++) {
+            Element emptyElement = null;
+            blocks.add(emptyElement);
         }
+        lines = new ArrayList<>();
+        System.out.println(blocks.size());
+        for (int i = 0; i < blockNodes.getLength(); i++) {
+            blocks.set(Integer.parseInt(((Element)blockNodes.item(i)).getAttribute("SID")),(Element) blockNodes.item(i)); // adds blocks to ArrayList<Elements>, sorted by SID
+        }
+//        for (int i = 0; i < 50; i++) {
+//            if (blocks.get(i) == null) {
+//                blocks.remove(blocks.get(i));
+//            }
+//        }
         for (int i = 0; i < lineNodes.getLength(); i++) {
             lines.add((Element) lineNodes.item(i)); // adds lines to ArrayList<Elements>
         }
         // add Blocks to the drawingPane
         for (Element block: blocks) {
-            Rectangle rectangle = new Rectangle();
-            NodeList blockChildNodes = block.getChildNodes();
-            String position = "";
-            for (int i = 0; i < blockChildNodes.getLength(); i++) {
-                if (((Element) blockChildNodes.item(i)).hasAttribute("Position") && blockChildNodes.item(i).getParentNode().equals(block)) {  // direct child bug handled
-                    position = blockChildNodes.item(i).getTextContent();
+            if (block != null) {
+                Rectangle rectangle = new Rectangle();
+                NodeList blockChildNodes = block.getChildNodes();
+                String position = "";
+                for (int i = 0; i < blockChildNodes.getLength(); i++) {
+                    if (/*((Element) blockChildNodes.item(i)).hasAttribute("Position") && */blockChildNodes.item(i).getParentNode().equals(block)) {  // direct child bug handled
+                        position = blockChildNodes.item(i).getTextContent();
+                    }
                 }
-            }
-            rectangle.setX(getXFromPosition(position));
-            rectangle.setY(getYFromPosition(position));
-            rectangle.setHeight(getHeightFromPosition(position));
-            rectangle.setWidth(getWidthFromPosition(position));
-            rectangles.add(rectangle);
-            drawingPane.getChildren().add(rectangle);
+                rectangle.setX(getXFromPosition(position));
+                rectangle.setY(getYFromPosition(position));
+                rectangle.setHeight(getHeightFromPosition(position));
+                rectangle.setWidth(getWidthFromPosition(position));
+                rectangles.add(rectangle);
+                drawingPane.getChildren().add(rectangle);
 
-            Text blockText = new Text();
-            blockText.setText(block.getTagName());
-            blockText.setX(getXFromPosition(position));
-            blockText.setY(getYFromPosition(position));
-            drawingPane.getChildren().add(blockText);
+                Text blockText = new Text();
+                blockText.setText(block.getTagName());
+                blockText.setX(getXFromPosition(position));
+                blockText.setY(getYFromPosition(position));
+                drawingPane.getChildren().add(blockText);
+            }
         }
         // add Lines to the drawingPane
         // iterate over line elements
@@ -204,7 +222,11 @@ public class ViewerApplication extends Application {
         /* TODO: Scene
          *   for each block, get dimensions and position, then add to scene
          *   for each line, get source point and destination point, then add to scene*/
-
+        Scene drawingScene = new Scene(drawingPane);
+        stage.setHeight(600);
+        stage.setWidth(1000);
+        stage.setTitle("Viewing " + mdlFile.getName());
+        stage.show();
     }
 
     public static void main(String[] args) { launch(); }
@@ -219,15 +241,28 @@ public class ViewerApplication extends Application {
 
     }
 
-    /* Reads XML file and extracts all of its Block elements into a NodeList */
-    public static NodeList blocksFromXML(File XMLFile) {
+    /* Reads XML file and extracts all of its elements with a specific tagName into a NodeList */
+    public static NodeList elementsFromXML(File XMLFile, String tagName) {
         // TODO: Issue #3
+        DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+        DocumentBuilder db;
+        try {
+            db = dbf.newDocumentBuilder();
+        } catch (ParserConfigurationException e) {
+            throw new RuntimeException(e);
+        }
+        Document xmlDoc;
+        try {
+            xmlDoc = db.parse(XMLFile);
+        } catch (SAXException e) {
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return xmlDoc.getElementsByTagName(tagName);
     }
 
-    /* Reads XML file and extracts all of its Line elements into a NodeList */
-    public static NodeList linesFromXML(File XMLFile) {
-        // TODO: Issue #4
-    }
+
 
     /* Takes String like "[1040, 283, 1075, 317]" and returns X value of the rectangle as a double*/
     public static double getXFromPosition(String position) {
