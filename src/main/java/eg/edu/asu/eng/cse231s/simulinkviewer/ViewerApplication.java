@@ -73,7 +73,9 @@ public class ViewerApplication extends Application {
         // iterate over line elements
         for (Element lineElement: lines) {
             int SrcID;
-            int startXDir = 1; // initial direction is positive x (1) or negative x (0) TODO
+            int DstID;
+            int startXDir = 1; // initial direction is positive x (1) or negative x (0)
+            int endXDir = 0; // end direction is is positive x (0) or negative x (1)
             // iterate over the child nodes of the line
             for (int i = 0; i < lineElement.getChildNodes().getLength(); i++) {
                 // Find Points element
@@ -82,14 +84,20 @@ public class ViewerApplication extends Application {
                     if (getPointsFromString(currentChild.getTextContent())[0].getX() >= 0)
                         startXDir = 1;
                     else startXDir = 0;
+
                     break;
                 }
             }
-            boolean hasPointsFlag = false;
+            boolean hasPointsFlag = false; // TODO: Is this needed?
+            Point ptCursor = null;
+            Point Src = new Point();
+            Point Dst = new Point();
+            Point branchPtCursor = null;
+
+
             // iterate over the child nodes of the line
             for (int i = 0; i < lineElement.getChildNodes().getLength(); i++) {
 
-                Point Src = new Point();
                 // in case the Node is a P node
                 if (((Element) lineElement.getChildNodes().item(i)).getTagName().equals("P")) {
                     Element currentP = (Element) lineElement.getChildNodes().item(i);
@@ -97,23 +105,17 @@ public class ViewerApplication extends Application {
                     // in case the node is Src
                     if (currentP.getAttribute("Name").equals("Src")) {
                         SrcID = Integer.parseInt(currentP.getTextContent().split("#")[0]);
-                        Src.setX(rectangles.get(SrcID).getX() + startXDir * rectangles.get(SrcID).getHeight());
+                        Src.setX(rectangles.get(SrcID).getX() + startXDir * rectangles.get(SrcID).getWidth());
                         Src.setY(rectangles.get(SrcID).getY() + 0.5 * rectangles.get(SrcID).getHeight());
+                        ptCursor = new Point(Src.getX(), Src.getY());
                     }
-                    // in case the node is Points
 
-                    if (currentP.getAttribute("Name").equals("Points")) {
+                    // in case the node is Points
+                    else if (currentP.getAttribute("Name").equals("Points") && ptCursor != null) {
                         hasPointsFlag = true;
                         Point[] points = getPointsFromString(currentP.getTextContent());
-                        Line initialLine = new Line();
-                        Point ptCursor = new Point(Src.getX(), Src.getY());
-                        initialLine.setStartX(ptCursor.getX());
-                        initialLine.setStartY(ptCursor.getY());
-                        ptCursor = ptCursor.add(points[0]);
-                        initialLine.setEndX(ptCursor.getX());
-                        initialLine.setEndY(ptCursor.getY());
-                        drawingPane.getChildren().add(initialLine);
-                        for (int j = 1; j < points.length; j++) {
+                        // draws the midLines
+                        for (int j = 0; j < points.length; j++) {
                             Line midLine = new Line();
                             midLine.setStartX(ptCursor.getX());
                             midLine.setStartY(ptCursor.getX());
@@ -122,15 +124,63 @@ public class ViewerApplication extends Application {
                             midLine.setEndY(points[j].getY());
                             drawingPane.getChildren().add(midLine);
                         }
+                        branchPtCursor = new Point(ptCursor.getX(), ptCursor.getY());
                     }
 
                     // in case the node is Dst
+                    else if (currentP.getAttribute("Name").equals("Dst") && ptCursor != null) {
+                        DstID = Integer.parseInt(currentP.getTextContent().split("#")[0]);
+                        if (rectangles.get(DstID).getX() > ptCursor.getX())
+                        {
+                            endXDir = 0;
+                        } else endXDir = 1;
+                        Dst.setX(rectangles.get(DstID).getX() + endXDir * rectangles.get(DstID).getWidth());
+                        Dst.setY(ptCursor.getY());
+                        Line endLine = new Line();
+                        endLine.setStartY(ptCursor.getX());
+                        endLine.setStartY(ptCursor.getY());
+                        endLine.setEndX(Dst.getX());
+                        endLine.setEndY(Dst.getY());
+                        drawingPane.getChildren().add(endLine);
+                        // TODO: arrow heads
+                    }
                 }
 
                 // in case the Node is a Branch node
-                if (((Element) lineElement.getChildNodes().item(i)).getTagName().equals("Branch")) {
+                else if (((Element) lineElement.getChildNodes().item(i)).getTagName().equals("Branch")) {
+                    // iterate over the child ndoes of the branch
+                    Element branchElement = (Element) lineElement.getChildNodes().item(i);
+                    Point branchDst = new Point();
+                    int branchDstID;
+                    int branchEndXDir = 0; // end direction is is positive x (0) or negative x (1)
+                    for (int j = 0; j < branchElement.getChildNodes().getLength(); j++) {
+                        Element currentP = (Element) branchElement.getChildNodes().item(j);
 
+
+                        // in case the node is Points
+                        if (currentP.getAttribute("Name").equals("Points")) {
+                            Point[] branchPoints = getPointsFromString(currentP.getTextContent());
+                            // draw the midlines
+                            for (int k = 0; k < branchPoints.length; k++) {
+                                Line midLine = new Line();
+                                midLine.setStartX(branchPtCursor.getX());
+                                midLine.setStartY(branchPtCursor.getY());
+                                branchPtCursor = branchPtCursor.add(branchPoints[j]);
+                                midLine.setEndX(branchPtCursor.getX());
+                                midLine.setEndY(branchPtCursor.getY());
+                                drawingPane.getChildren().add(midLine);
+                            }
+                        }
+
+                        // in case the node is Dst
+                        if (currentP.getAttribute("Name").equals("Dst")) {
+
+                        }
+                    }
                 }
+                // return the cursor to the branch base
+                branchPtCursor.setX(ptCursor.getX());
+                branchPtCursor.setY(ptCursor.getY());
             }
         }
 
@@ -180,18 +230,16 @@ public class ViewerApplication extends Application {
 
     public static Point[] getPointsFromString(String pointsString) {
         Point[] points;
-        String[] numbers;
+        String[] vectors;
         pointsString = pointsString.replace('[', ' ');
         pointsString = pointsString.replace(']', ' ');
         pointsString = pointsString.trim();
-        numbers = pointsString.split(", ");
-        points = new Point[numbers.length / 2];
-
-        for (int i = 0, j = 0; i < numbers.length; j++) {
-            points[j].setX(Double.parseDouble(numbers[i]));
-            i++;
-            points[j].setY(Double.parseDouble(numbers[i]));
-            i++;
+        vectors = pointsString.split("; ");
+        points = new Point[vectors.length];
+        for (int i = 0; i < vectors.length; i++) {
+            String[] coords = vectors[i].split(", ");
+            points[i].setX(Double.parseDouble(coords[0]));
+            points[i].setY(Double.parseDouble(coords[1]));
         }
         return points;
     }
