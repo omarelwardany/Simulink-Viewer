@@ -6,6 +6,7 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 import org.w3c.dom.Element;
@@ -31,12 +32,19 @@ public class ViewerApplication extends Application {
         String mdlPath;
         ArrayList<Rectangle> rectangles = new ArrayList<>();
 
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Open MDL file");
+        FileChooser.ExtensionFilter extFilter = new FileChooser.ExtensionFilter("Simulink Models (*.mdl)", "*.mdl");
+        fileChooser.getExtensionFilters().add(extFilter);
+
+        File mdlFile = fileChooser.showOpenDialog(stage);
+
         /* TODO: Scene  (Issue #2)
         *   Textbox and button to get file path, then save it to a String called mdlPath*/
 
         /* this block of code converts the mdl file to an ArrayList of blocks and an ArrayList for lines to be drawn
            it should be placed inside the initial scene's button event handler */
-        mdlPath = /* Test path */ "C:\\Users\\OmarEmadSayedEl-Ward\\Desktop\\Example.mdl";
+        mdlPath = mdlFile.getAbsolutePath();
         XMLFile = extractXML(mdlPath);
         blockNodes = blocksFromXML(XMLFile);
         lineNodes = linesFromXML(XMLFile);
@@ -92,7 +100,6 @@ public class ViewerApplication extends Application {
                     }
                 }
             }
-            boolean hasPointsFlag = false; // TODO: Is this needed?
             Point ptCursor = null;
             Point Src = new Point();
             Point Dst = new Point();
@@ -116,7 +123,6 @@ public class ViewerApplication extends Application {
 
                         // in case the node is Points
                         else if (currentP.getAttribute("Name").equals("Points") && ptCursor != null) {
-                            hasPointsFlag = true;
                             Point[] points = getPointsFromString(currentP.getTextContent());
                             // draws the midLines
                             for (int j = 0; j < points.length; j++) {
