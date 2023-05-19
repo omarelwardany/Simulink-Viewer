@@ -14,6 +14,9 @@ import org.w3c.dom.NodeList;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.io.*;
@@ -45,7 +48,11 @@ public class ViewerApplication extends Application {
         /* this block of code converts the mdl file to an ArrayList of blocks and an ArrayList for lines to be drawn
            it should be placed inside the initial scene's button event handler */
         mdlPath = mdlFile.getAbsolutePath();
-        XMLFile = extractXML(mdlPath);
+        try {
+            XMLFile = extractXML(mdlPath);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         blockNodes = blocksFromXML(XMLFile);
         lineNodes = linesFromXML(XMLFile);
         blocks = new ArrayList<>();
@@ -206,9 +213,9 @@ public class ViewerApplication extends Application {
     *  and then saves it to a new XML file and returns it as a File object*/
     public static File extractXML(String mdlPath)  throws IOException {
 
-       // String mdlContent = readFromFile(mdlPath);   //TODO method read file
-       // String xmlContent = extract(mdlPath);   //TODO method extract xml
-
+        String mdlContent = readFileToString(mdlPath);
+        String xmlContent = getSubstring(mdlContent, "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<System>", "</System>");
+        return stringToFile(xmlContent);
 
     }
 
@@ -224,7 +231,7 @@ public class ViewerApplication extends Application {
 
     /* Takes String like "[1040, 283, 1075, 317]" and returns X value of the rectangle as a double*/
     public static double getXFromPosition(String position) {
-        String[] positionTag =  position.replaceAll("\\[" ,"" ).replaceAll("\\]" , "").split(",");
+        String[] positionTag =  position.replaceAll("\\[" ,"" ).replaceAll("]" , "").split(",");
 
         Double x = Double.parseDouble(positionTag[0]);
 
@@ -233,7 +240,7 @@ public class ViewerApplication extends Application {
 
     /* Takes String like "[1040, 283, 1075, 317]" and returns Y value of the rectangle as a double*/
     public static double getYFromPosition(String position) {
-        String[] positionTag =  position.replaceAll("\\[" ,"" ).replaceAll("\\]" , "").split(",");
+        String[] positionTag =  position.replaceAll("\\[" ,"" ).replaceAll("]" , "").split(",");
 
         Double y = Double.parseDouble(positionTag[1]);
 
@@ -242,7 +249,7 @@ public class ViewerApplication extends Application {
 
     /* Takes String like "[1040, 283, 1075, 317]" and returns Width value of the rectangle as a double*/
     public static double getWidthFromPosition(String position) {
-        String[] positionTag =  position.replaceAll("\\[" ,"" ).replaceAll("\\]" , "").split(",");
+        String[] positionTag =  position.replaceAll("\\[" ,"" ).replaceAll("]" , "").split(",");
 
         Double widthPlusX = Double.parseDouble(positionTag[2]);
         Double x = Double.parseDouble(positionTag[0]);
@@ -252,7 +259,7 @@ public class ViewerApplication extends Application {
 
     /* Takes String like "[1040, 283, 1075, 317]" and returns Height value of the rectangle as a double*/
     public static double getHeightFromPosition(String position) {
-        String[] positionTag =  position.replaceAll("\\[" ,"" ).replaceAll("\\]" , "").split(",");
+        String[] positionTag =  position.replaceAll("\\[" ,"" ).replaceAll("]" , "").split(",");
 
         Double heightPlusY = Double.parseDouble(positionTag[3]);
         Double y = Double.parseDouble(positionTag[1]);
@@ -274,6 +281,44 @@ public class ViewerApplication extends Application {
             points[i].setY(Double.parseDouble(coords[1]));
         }
         return points;
+    }
+
+    public static void saveFile(File file, String filePath) throws IOException {
+        FileInputStream inputStream = new FileInputStream(file);
+        FileOutputStream outputStream = new FileOutputStream(filePath);
+
+        byte[] buffer = new byte[4096];
+        int bytesRead;
+
+        while ((bytesRead = inputStream.read(buffer)) != -1) {
+            outputStream.write(buffer, 0, bytesRead);
+        }
+
+        inputStream.close();
+        outputStream.close();
+    }
+
+    public static String readFileToString(String filePath) throws IOException {
+        byte[] bytes = Files.readAllBytes(Paths.get(filePath));
+        return new String(bytes, StandardCharsets.UTF_8);
+    }
+
+    public static File stringToFile(String content) throws IOException {
+        File file = File.createTempFile("temp", ".xml");
+        Files.write(file.toPath(), content.getBytes());
+        return file;
+    }
+
+    public static String getSubstring(String string1, String string2, String string3) {
+        int startIndex = string1.indexOf(string2);
+        if (startIndex == -1) {
+            return "";  // string2 not found in string1
+        }
+        int endIndex = string1.indexOf(string3, startIndex + string2.length());
+        if (endIndex == -1) {
+            return "";  // string3 not found after string2 in string1
+        }
+        return string2 + string1.substring(startIndex + string2.length(), endIndex) + string3;
     }
 }
 
