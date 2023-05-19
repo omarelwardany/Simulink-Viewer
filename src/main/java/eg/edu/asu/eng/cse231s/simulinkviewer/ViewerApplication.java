@@ -52,7 +52,7 @@ public class ViewerApplication extends Application {
             NodeList blockChildNodes = block.getChildNodes();
             String position = "";
             for (int i = 0; i < blockChildNodes.getLength(); i++) {
-                if (((Element) blockChildNodes.item(i)).hasAttribute("Position")) {
+                if (((Element) blockChildNodes.item(i)).hasAttribute("Position") && blockChildNodes.item(i).getParentNode().equals(block)) {  // direct child bug handled
                     position = blockChildNodes.item(i).getTextContent();
                 }
             }
@@ -78,14 +78,16 @@ public class ViewerApplication extends Application {
             int endXDir = 0; // end direction is is positive x (0) or negative x (1)
             // iterate over the child nodes of the line
             for (int i = 0; i < lineElement.getChildNodes().getLength(); i++) {
-                // Find Points element
-                Element currentChild = (Element) lineElement.getChildNodes().item(i);
-                if (currentChild.getAttribute("Name").equals("Points")) {
-                    if (getPointsFromString(currentChild.getTextContent())[0].getX() >= 0)
-                        startXDir = 1;
-                    else startXDir = 0;
+                if (lineElement.getChildNodes().item(i).getParentNode().equals(lineElement)) { // direct child bug handled
+                    // Find Points element
+                    Element currentChild = (Element) lineElement.getChildNodes().item(i); // direct child bug handled
+                    if (currentChild.getAttribute("Name").equals("Points")) {
+                        if (getPointsFromString(currentChild.getTextContent())[0].getX() >= 0)
+                            startXDir = 1;
+                        else startXDir = 0;
 
-                    break;
+                        break;
+                    }
                 }
             }
             boolean hasPointsFlag = false; // TODO: Is this needed?
@@ -97,90 +99,90 @@ public class ViewerApplication extends Application {
 
             // iterate over the child nodes of the line
             for (int i = 0; i < lineElement.getChildNodes().getLength(); i++) {
+                if (lineElement.getChildNodes().item(i).getParentNode().equals(lineElement)) { // direct child bug handled
+                    // in case the Node is a P node
+                    if (((Element) lineElement.getChildNodes().item(i)).getTagName().equals("P")) { // direct child bug handled
+                        Element currentP = (Element) lineElement.getChildNodes().item(i);  // direct child bug handled
 
-                // in case the Node is a P node
-                if (((Element) lineElement.getChildNodes().item(i)).getTagName().equals("P")) {
-                    Element currentP = (Element) lineElement.getChildNodes().item(i);
-
-                    // in case the node is Src
-                    if (currentP.getAttribute("Name").equals("Src")) {
-                        SrcID = Integer.parseInt(currentP.getTextContent().split("#")[0]);
-                        Src.setX(rectangles.get(SrcID).getX() + startXDir * rectangles.get(SrcID).getWidth());
-                        Src.setY(rectangles.get(SrcID).getY() + 0.5 * rectangles.get(SrcID).getHeight());
-                        ptCursor = new Point(Src.getX(), Src.getY());
-                    }
-
-                    // in case the node is Points
-                    else if (currentP.getAttribute("Name").equals("Points") && ptCursor != null) {
-                        hasPointsFlag = true;
-                        Point[] points = getPointsFromString(currentP.getTextContent());
-                        // draws the midLines
-                        for (int j = 0; j < points.length; j++) {
-                            Line midLine = new Line();
-                            midLine.setStartX(ptCursor.getX());
-                            midLine.setStartY(ptCursor.getX());
-                            ptCursor = ptCursor.add(points[j]);
-                            midLine.setEndX(points[j].getX());
-                            midLine.setEndY(points[j].getY());
-                            drawingPane.getChildren().add(midLine);
+                        // in case the node is Src
+                        if (currentP.getAttribute("Name").equals("Src")) {
+                            SrcID = Integer.parseInt(currentP.getTextContent().split("#")[0]);
+                            Src.setX(rectangles.get(SrcID).getX() + startXDir * rectangles.get(SrcID).getWidth());
+                            Src.setY(rectangles.get(SrcID).getY() + 0.5 * rectangles.get(SrcID).getHeight());
+                            ptCursor = new Point(Src.getX(), Src.getY());
                         }
-                        branchPtCursor = new Point(ptCursor.getX(), ptCursor.getY());
-                    }
-
-                    // in case the node is Dst
-                    else if (currentP.getAttribute("Name").equals("Dst") && ptCursor != null) {
-                        DstID = Integer.parseInt(currentP.getTextContent().split("#")[0]);
-                        if (rectangles.get(DstID).getX() > ptCursor.getX())
-                        {
-                            endXDir = 0;
-                        } else endXDir = 1;
-                        Dst.setX(rectangles.get(DstID).getX() + endXDir * rectangles.get(DstID).getWidth());
-                        Dst.setY(ptCursor.getY());
-                        Line endLine = new Line();
-                        endLine.setStartY(ptCursor.getX());
-                        endLine.setStartY(ptCursor.getY());
-                        endLine.setEndX(Dst.getX());
-                        endLine.setEndY(Dst.getY());
-                        drawingPane.getChildren().add(endLine);
-                        // TODO: arrow heads
-                    }
-                }
-
-                // in case the Node is a Branch node
-                else if (((Element) lineElement.getChildNodes().item(i)).getTagName().equals("Branch")) {
-                    // iterate over the child ndoes of the branch
-                    Element branchElement = (Element) lineElement.getChildNodes().item(i);
-                    Point branchDst = new Point();
-                    int branchDstID;
-                    int branchEndXDir = 0; // end direction is is positive x (0) or negative x (1)
-                    for (int j = 0; j < branchElement.getChildNodes().getLength(); j++) {
-                        Element currentP = (Element) branchElement.getChildNodes().item(j);
-
 
                         // in case the node is Points
-                        if (currentP.getAttribute("Name").equals("Points")) {
-                            Point[] branchPoints = getPointsFromString(currentP.getTextContent());
-                            // draw the midlines
-                            for (int k = 0; k < branchPoints.length; k++) {
+                        else if (currentP.getAttribute("Name").equals("Points") && ptCursor != null) {
+                            hasPointsFlag = true;
+                            Point[] points = getPointsFromString(currentP.getTextContent());
+                            // draws the midLines
+                            for (int j = 0; j < points.length; j++) {
                                 Line midLine = new Line();
-                                midLine.setStartX(branchPtCursor.getX());
-                                midLine.setStartY(branchPtCursor.getY());
-                                branchPtCursor = branchPtCursor.add(branchPoints[j]);
-                                midLine.setEndX(branchPtCursor.getX());
-                                midLine.setEndY(branchPtCursor.getY());
+                                midLine.setStartX(ptCursor.getX());
+                                midLine.setStartY(ptCursor.getX());
+                                ptCursor = ptCursor.add(points[j]);
+                                midLine.setEndX(points[j].getX());
+                                midLine.setEndY(points[j].getY());
                                 drawingPane.getChildren().add(midLine);
                             }
+                            branchPtCursor = new Point(ptCursor.getX(), ptCursor.getY());
                         }
 
                         // in case the node is Dst
-                        if (currentP.getAttribute("Name").equals("Dst")) {
-
+                        else if (currentP.getAttribute("Name").equals("Dst") && ptCursor != null) {
+                            DstID = Integer.parseInt(currentP.getTextContent().split("#")[0]);
+                            if (rectangles.get(DstID).getX() > ptCursor.getX()) {
+                                endXDir = 0;
+                            } else endXDir = 1;
+                            Dst.setX(rectangles.get(DstID).getX() + endXDir * rectangles.get(DstID).getWidth());
+                            Dst.setY(ptCursor.getY());
+                            Line endLine = new Line();
+                            endLine.setStartY(ptCursor.getX());
+                            endLine.setStartY(ptCursor.getY());
+                            endLine.setEndX(Dst.getX());
+                            endLine.setEndY(Dst.getY());
+                            drawingPane.getChildren().add(endLine);
+                            // TODO: arrow heads
                         }
                     }
+
+                    // in case the Node is a Branch node
+                    else if (((Element) lineElement.getChildNodes().item(i)).getTagName().equals("Branch")) {
+                        // iterate over the child ndoes of the branch
+                        Element branchElement = (Element) lineElement.getChildNodes().item(i);
+                        Point branchDst = new Point();
+                        int branchDstID;
+                        int branchEndXDir = 0; // end direction is is positive x (0) or negative x (1)
+                        for (int j = 0; j < branchElement.getChildNodes().getLength(); j++) { // direct child bug not present
+                            Element currentP = (Element) branchElement.getChildNodes().item(j);
+
+
+                            // in case the node is Points
+                            if (currentP.getAttribute("Name").equals("Points")) {
+                                Point[] branchPoints = getPointsFromString(currentP.getTextContent());
+                                // draw the midlines
+                                for (int k = 0; k < branchPoints.length; k++) {
+                                    Line midLine = new Line();
+                                    midLine.setStartX(branchPtCursor.getX());
+                                    midLine.setStartY(branchPtCursor.getY());
+                                    branchPtCursor = branchPtCursor.add(branchPoints[j]);
+                                    midLine.setEndX(branchPtCursor.getX());
+                                    midLine.setEndY(branchPtCursor.getY());
+                                    drawingPane.getChildren().add(midLine);
+                                }
+                            }
+
+                            // in case the node is Dst
+                            if (currentP.getAttribute("Name").equals("Dst")) {
+
+                            }
+                        }
+                    }
+                    // return the cursor to the branch base
+                    branchPtCursor.setX(ptCursor.getX());
+                    branchPtCursor.setY(ptCursor.getY());
                 }
-                // return the cursor to the branch base
-                branchPtCursor.setX(ptCursor.getX());
-                branchPtCursor.setY(ptCursor.getY());
             }
         }
 
