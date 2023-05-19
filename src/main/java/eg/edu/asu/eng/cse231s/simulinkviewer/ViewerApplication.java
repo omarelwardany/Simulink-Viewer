@@ -241,7 +241,6 @@ public class ViewerApplication extends Application {
         Double widthPlusX = Double.parseDouble(positionTag[2]);
         Double x = Double.parseDouble(positionTag[0]);
         Double width = widthPlusX - x;
-        System.out.println(width);
         return width;
     }
 
@@ -252,7 +251,6 @@ public class ViewerApplication extends Application {
         Double heightPlusY = Double.parseDouble(positionTag[3]);
         Double y = Double.parseDouble(positionTag[1]);
         Double height = heightPlusY - y;
-        System.out.println(height);
         return height;
     }
 
