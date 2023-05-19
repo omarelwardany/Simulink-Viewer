@@ -62,12 +62,11 @@ public class ViewerApplication extends Application {
         blockNodes = elementsFromXML(XMLFile, "Block");
         lineNodes = elementsFromXML(XMLFile, "Line");
         blocks = new ArrayList<>();
-        for (int i = 0; i < 50; i++) {
+        for (int i = 0; i < 50; i++) {// TODO: ana may3gbne4 elklam dah
             Element emptyElement = null;
             blocks.add(emptyElement);
         }
-        lines = new ArrayList<>();
-        System.out.println(blocks.size());
+        //System.out.println(blocks.size());
         for (int i = 0; i < blockNodes.getLength(); i++) {
             blocks.set(Integer.parseInt(((Element)blockNodes.item(i)).getAttribute("SID")),(Element) blockNodes.item(i)); // adds blocks to ArrayList<Elements>, sorted by SID
         }
@@ -76,6 +75,7 @@ public class ViewerApplication extends Application {
 //                blocks.remove(blocks.get(i));
 //            }
 //        }
+        lines = new ArrayList<>();
         for (int i = 0; i < lineNodes.getLength(); i++) {
             lines.add((Element) lineNodes.item(i)); // adds lines to ArrayList<Elements>
         }
@@ -83,11 +83,11 @@ public class ViewerApplication extends Application {
         for (Element block: blocks) {
             if (block != null) {
                 Rectangle rectangle = new Rectangle();
-                NodeList blockChildNodes = block.getChildNodes();
                 String position = "";
-                for (int i = 0; i < blockChildNodes.getLength(); i++) {
-                    if (/*((Element) blockChildNodes.item(i)).hasAttribute("Position") && */blockChildNodes.item(i).getParentNode().equals(block)) {  // direct child bug handled
-                        position = blockChildNodes.item(i).getTextContent();
+                for (int i = 0; i < block.getChildNodes().getLength(); i++) {
+                    if ((block.getChildNodes().item(i)).getTextContent().matches(".*,.*,.*,.*") && block.getChildNodes().item(i).getParentNode().equals(block)) {  // direct child bug handled
+                        position = block.getChildNodes().item(i).getTextContent();
+                        System.out.println(position);
                     }
                 }
                 rectangle.setX(getXFromPosition(position));
@@ -284,7 +284,7 @@ public class ViewerApplication extends Application {
 
     /* Takes String like "[1040, 283, 1075, 317]" and returns Width value of the rectangle as a double*/
     public static double getWidthFromPosition(String position) {
-        String[] positionTag =  position.replaceAll("\\[" ,"" ).replaceAll("]" , "").split(",");
+        String[] positionTag =  position.replaceAll("\\[" ,"" ).replaceAll("]" , "").split(", ");
 
         Double widthPlusX = Double.parseDouble(positionTag[2]);
         Double x = Double.parseDouble(positionTag[0]);
@@ -294,7 +294,7 @@ public class ViewerApplication extends Application {
 
     /* Takes String like "[1040, 283, 1075, 317]" and returns Height value of the rectangle as a double*/
     public static double getHeightFromPosition(String position) {
-        String[] positionTag =  position.replaceAll("\\[" ,"" ).replaceAll("]" , "").split(",");
+        String[] positionTag =  position.replaceAll("\\[" ,"" ).replaceAll("]" , "").split(", ");
 
         Double heightPlusY = Double.parseDouble(positionTag[3]);
         Double y = Double.parseDouble(positionTag[1]);
