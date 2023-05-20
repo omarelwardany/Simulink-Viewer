@@ -12,6 +12,7 @@ import javafx.stage.Stage;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
@@ -34,7 +35,7 @@ public class ViewerApplication extends Application {
     public void start(Stage stage) {
         // required declarations before initial scene event handler
         Pane drawingPane = new StackPane();
-        File XMLFile;
+        String XMLFile;
         NodeList blockNodes;
         NodeList lineNodes;
         List<Element> blocks;
@@ -56,7 +57,7 @@ public class ViewerApplication extends Application {
            it should be placed inside the initial scene's button event handler */
         mdlPath = mdlFile.getAbsolutePath();
         try {
-            XMLFile = extractXML(mdlPath);
+            XMLFile = extractXMLasString(mdlPath);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -111,13 +112,13 @@ public class ViewerApplication extends Application {
             int SrcID;
             int DstID;
             int startXDir = 1; // initial direction is positive x (1) or negative x (0)
-            int endXDir = 0; // end direction is is positive x (0) or negative x (1)
+            int endXDir = 0; // end direction is positive x (0) or negative x (1)
             // iterate over the child nodes of the line
             for (int i = 0; i < lineElement.getChildNodes().getLength(); i++) {
                 if (lineElement.getChildNodes().item(i).getParentNode().equals(lineElement)) { // direct child bug handled
                     // Find Points element
-                    Element currentChild = (Element) lineElement.getChildNodes().item(i); // direct child bug handled
-                    if (currentChild.getAttribute("Name").equals("Points")) {
+                    Node currentChild = lineElement.getChildNodes().item(i); // direct child bug handled
+                    if (currentChild.getTextContent().matches(".*,.*")) {
                         if (getPointsFromString(currentChild.getTextContent())[0].getX() >= 0)
                             startXDir = 1;
                         else startXDir = 0;
@@ -130,25 +131,33 @@ public class ViewerApplication extends Application {
             Point Src = new Point();
             Point Dst = new Point();
             Point branchPtCursor = null;
-
+            boolean branchPtCursorExists = false;
 
             // iterate over the child nodes of the line
             for (int i = 0; i < lineElement.getChildNodes().getLength(); i++) {
+                boolean usefulNode = false;
                 if (lineElement.getChildNodes().item(i).getParentNode().equals(lineElement)) { // direct child bug handled
                     // in case the Node is a P node
-                    if (((Element) lineElement.getChildNodes().item(i)).getTagName().equals("P")) { // direct child bug handled
-                        Element currentP = (Element) lineElement.getChildNodes().item(i);  // direct child bug handled
+                    if (lineElement.getChildNodes().item(i).getNodeType() == Node.TEXT_NODE) { // direct child bug handled
+                        org.w3c.dom.Text currentP = (org.w3c.dom.Text) lineElement.getChildNodes().item(i);  // direct child bug handled
 
                         // in case the node is Src
-                        if (currentP.getAttribute("Name").equals("Src")) {
+                        System.out.println(currentP.getTextContent());
+                        System.out.println(currentP.getWholeText());
+                        System.out.println(currentP.getPrefix());
+                        System.out.println(currentP.getData());
+                        System.out.println(currentP.isElementContentWhitespace());
+                        System.out.println(currentP.getNodeValue());
+                        if (currentP.getTextContent().matches(".*#out:.*")) {
                             SrcID = Integer.parseInt(currentP.getTextContent().split("#")[0]);
                             Src.setX(rectangles.get(SrcID).getX() + startXDir * rectangles.get(SrcID).getWidth());
                             Src.setY(rectangles.get(SrcID).getY() + 0.5 * rectangles.get(SrcID).getHeight());
                             ptCursor = new Point(Src.getX(), Src.getY());
+                            usefulNode = true;
                         }
 
                         // in case the node is Points
-                        else if (currentP.getAttribute("Name").equals("Points") && ptCursor != null) {
+                        else if (currentP.getTextContent().matches(".*,.*") && ptCursor != null) {
                             Point[] points = getPointsFromString(currentP.getTextContent());
                             // draws the midLines
                             for (int j = 0; j < points.length; j++) {
@@ -161,10 +170,12 @@ public class ViewerApplication extends Application {
                                 drawingPane.getChildren().add(midLine);
                             }
                             branchPtCursor = new Point(ptCursor.getX(), ptCursor.getY());
+                            branchPtCursorExists = true;
+                            usefulNode = true;
                         }
 
                         // in case the node is Dst
-                        else if (currentP.getAttribute("Name").equals("Dst") && ptCursor != null) {
+                        else if (currentP.getTextContent().matches(".*#in:.*") && ptCursor != null) {
                             DstID = Integer.parseInt(currentP.getTextContent().split("#")[0]);
                             if (rectangles.get(DstID).getX() > ptCursor.getX()) {
                                 endXDir = 0;
@@ -178,6 +189,7 @@ public class ViewerApplication extends Application {
                             endLine.setEndY(Dst.getY());
                             drawingPane.getChildren().add(endLine);
                             // TODO: arrow heads
+                            usefulNode = true;
                         }
                     }
 
@@ -189,11 +201,11 @@ public class ViewerApplication extends Application {
                         int branchDstID;
                         int branchEndXDir = 0; // end direction is is positive x (0) or negative x (1)
                         for (int j = 0; j < branchElement.getChildNodes().getLength(); j++) { // direct child bug not present
-                            Element currentP = (Element) branchElement.getChildNodes().item(j);
+                            Node currentP = branchElement.getChildNodes().item(j);
 
 
                             // in case the node is Points
-                            if (currentP.getAttribute("Name").equals("Points")) {
+                            if (currentP.getTextContent().matches(".*,.*")) {
                                 Point[] branchPoints = getPointsFromString(currentP.getTextContent());
                                 // draw the midlines
                                 for (int k = 0; k < branchPoints.length; k++) {
@@ -208,14 +220,17 @@ public class ViewerApplication extends Application {
                             }
 
                             // in case the node is Dst
-                            if (currentP.getAttribute("Name").equals("Dst")) {
+                            if (currentP.getTextContent().matches(".*#in:.*")) {
 
                             }
                         }
+                        usefulNode = true;
                     }
                     // return the cursor to the branch base
-                    branchPtCursor.setX(ptCursor.getX());
-                    branchPtCursor.setY(ptCursor.getY());
+                    if (usefulNode) {
+                        branchPtCursor.setX(ptCursor.getX());
+                        branchPtCursor.setY(ptCursor.getY());
+                    }
                 }
             }
         }
@@ -234,16 +249,16 @@ public class ViewerApplication extends Application {
 
     /* Extracts important information from mdl file
     *  and then saves it to a new XML file and returns it as a File object*/
-    public static File extractXML(String mdlPath)  throws IOException {
+    public static String extractXMLasString(String mdlPath)  throws IOException {
 
         String mdlContent = readFileToString(mdlPath);
         String xmlContent = getSubstring(mdlContent, "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<System>", "</System>");
-        return stringToFile(xmlContent);
+        return xmlContent;
 
     }
 
     /* Reads XML file and extracts all of its elements with a specific tagName into a NodeList */
-    public static NodeList elementsFromXML(File XMLFile, String tagName) {
+    public static NodeList elementsFromXML(String XMLFile, String tagName) {
         // TODO: Issue #3
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
         DocumentBuilder db;
@@ -254,13 +269,15 @@ public class ViewerApplication extends Application {
         }
         Document xmlDoc;
         try {
-            xmlDoc = db.parse(XMLFile);
+            File XML = stringToFile(XMLFile);
+            xmlDoc = db.parse(XML);
         } catch (SAXException e) {
             throw new RuntimeException(e);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        return xmlDoc.getElementsByTagName(tagName);
+        NodeList toReturn = xmlDoc.getElementsByTagName(tagName);
+        return toReturn;
     }
 
 
@@ -274,6 +291,7 @@ public class ViewerApplication extends Application {
         points = new Point[vectors.length];
         for (int i = 0; i < vectors.length; i++) {
             String[] coords = vectors[i].split(", ");
+            points[i] = new Point();
             points[i].setX(Double.parseDouble(coords[0]));
             points[i].setY(Double.parseDouble(coords[1]));
         }
