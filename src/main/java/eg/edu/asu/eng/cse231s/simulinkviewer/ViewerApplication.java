@@ -211,7 +211,7 @@ public class ViewerApplication extends Application {
                                     Line midLine = new Line();
                                     midLine.setStartX(branchPtCursor.getX());
                                     midLine.setStartY(branchPtCursor.getY());
-                                    branchPtCursor = branchPtCursor.add(branchPoints[j]);
+                                    branchPtCursor = branchPtCursor.add(branchPoints[k]);
                                     midLine.setEndX(branchPtCursor.getX());
                                     midLine.setEndY(branchPtCursor.getY());
                                     drawingPane.getChildren().add(midLine);
@@ -227,8 +227,7 @@ public class ViewerApplication extends Application {
                     }
                     // return the cursor to the branch base
                     if (usefulNode) {
-                        branchPtCursor.setX(ptCursor.getX());
-                        branchPtCursor.setY(ptCursor.getY());
+                        branchPtCursor = new Point(ptCursor.getX(), ptCursor.getY());
                     }
                 }
             }
@@ -241,6 +240,7 @@ public class ViewerApplication extends Application {
         stage.setHeight(600);
         stage.setWidth(1000);
         stage.setTitle("Viewing " + mdlFile.getName());
+        stage.setScene(drawingScene);
         stage.show();
     }
 
