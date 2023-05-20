@@ -75,15 +75,10 @@ public class ViewerApplication extends Application {
             Element emptyElement = null;
             blocks.add(emptyElement);
         }
-        //System.out.println(blocks.size());
         for (int i = 0; i < blockNodes.getLength(); i++) {
             blocks.set(Integer.parseInt(((Element)blockNodes.item(i)).getAttribute("SID")),(Element) blockNodes.item(i)); // adds blocks to ArrayList<Elements>, sorted by SID
         }
-//        for (int i = 0; i < 50; i++) {
-//            if (blocks.get(i) == null) {
-//                blocks.remove(blocks.get(i));
-//            }
-//        }
+
         lines = new ArrayList<>();
         for (int i = 0; i < lineNodes.getLength(); i++) {
             lines.add((Element) lineNodes.item(i)); // adds lines to ArrayList<Elements>
@@ -96,7 +91,6 @@ public class ViewerApplication extends Application {
                 for (int i = 0; i < block.getChildNodes().getLength(); i++) {
                     if ((block.getChildNodes().item(i)).getTextContent().matches(".*,.*,.*,.*") && block.getChildNodes().item(i).getParentNode().equals(block)) {  // direct child bug handled
                         position = block.getChildNodes().item(i).getTextContent();
-                        System.out.println(position);
                         break;
                     }
                 }
@@ -162,8 +156,6 @@ public class ViewerApplication extends Application {
                         Element currentP = (Element) lineElement.getChildNodes().item(i);  // direct child bug handled
 
                         // in case the node is Src
-                        // System.out.println(currentP.getFirstChild().getTextContent());
-                        System.out.println(currentP.getTextContent());
                         if (currentP.getTextContent().matches(".*#out:.*")) {
                             SrcID = Integer.parseInt(currentP.getTextContent().split("#")[0]);
                             Src.setX(rectangles.get(SrcID).getX() + startXDir * rectangles.get(SrcID).getWidth());
@@ -326,10 +318,7 @@ public class ViewerApplication extends Application {
             xmlDoc = db.parse(XML.getAbsolutePath());
 
             xmlDoc.getDocumentElement().normalize();
-            NodeList toReturn = xmlDoc.getElementsByTagName(tagName);
-            System.out.println("toReturn = " + toReturn.getLength());
-            System.out.println("toReturn = " + toReturn.getLength());
-            return toReturn;
+            return xmlDoc.getElementsByTagName(tagName);
         } catch (SAXException e) {
             throw new RuntimeException(e);
         } catch (IOException e) {
