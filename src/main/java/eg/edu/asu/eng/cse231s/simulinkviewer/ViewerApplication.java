@@ -5,6 +5,7 @@ import javafx.geometry.Bounds;
 import javafx.scene.Scene;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Polygon;
 import javafx.scene.shape.Rectangle;
@@ -46,7 +47,8 @@ public class ViewerApplication extends Application {
         List<Element> lines;
         String mdlPath;
         ArrayList<Rectangle> rectangles = new ArrayList<>();
-        double arrowHeadDimension = 4;
+        double arrowHeadDimension = 3.5;
+        double branchPointDimension = 1.5;
 
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Open MDL file");
@@ -203,9 +205,9 @@ public class ViewerApplication extends Application {
                             drawingPane.getChildren().add(endLine);
                             Polygon arrowHead;
                             if (endXDir == 0) {
-                                arrowHead = new Polygon(0, 0, -arrowHeadDimension * Math.sqrt(2), -arrowHeadDimension, -arrowHeadDimension * Math.sqrt(2), arrowHeadDimension);
+                                arrowHead = new Polygon(0, 0, -arrowHeadDimension * 2, -arrowHeadDimension, -arrowHeadDimension * 2, arrowHeadDimension);
                             } else {
-                                arrowHead = new Polygon(0, 0, arrowHeadDimension * Math.sqrt(2), -arrowHeadDimension, arrowHeadDimension * Math.sqrt(2), arrowHeadDimension);
+                                arrowHead = new Polygon(0, 0, arrowHeadDimension * 2, -arrowHeadDimension, arrowHeadDimension * 2, arrowHeadDimension);
                             }
                             arrowHead.setTranslateX(Dst.getX());
                             arrowHead.setTranslateY(branchPtCursor.getY());
@@ -224,7 +226,12 @@ public class ViewerApplication extends Application {
                         for (int j = 0; j < branchElement.getChildNodes().getLength(); j++) { // direct child bug not present
                             Node currentP = branchElement.getChildNodes().item(j);
 
-
+                            Circle branchPoint = new Circle();
+                            branchPoint.setFill(Color.BLACK);
+                            branchPoint.setRadius(branchPointDimension);
+                            branchPoint.setCenterX(ptCursor.getX());
+                            branchPoint.setCenterY(ptCursor.getY());
+                            drawingPane.getChildren().add(branchPoint);
                             // in case the node is Points
                             if (currentP.getTextContent().matches(".*,.*")) {
                                 Point[] branchPoints = getPointsFromString(currentP.getTextContent());
@@ -256,9 +263,9 @@ public class ViewerApplication extends Application {
                                 drawingPane.getChildren().add(endLine);
                                 Polygon arrowHead;
                                 if (endXDir == 0) {
-                                    arrowHead = new Polygon(0, 0, -arrowHeadDimension * Math.sqrt(2), -arrowHeadDimension, -arrowHeadDimension * Math.sqrt(2), arrowHeadDimension);
+                                    arrowHead = new Polygon(0, 0, -arrowHeadDimension * 2, -arrowHeadDimension, -arrowHeadDimension * 2, arrowHeadDimension);
                                 } else {
-                                    arrowHead = new Polygon(0, 0, arrowHeadDimension * Math.sqrt(2), -arrowHeadDimension, arrowHeadDimension * Math.sqrt(2), arrowHeadDimension);
+                                    arrowHead = new Polygon(0, 0, arrowHeadDimension * 2, -arrowHeadDimension, arrowHeadDimension * 2, arrowHeadDimension);
                                 }
                                 arrowHead.setTranslateX(Dst.getX());
                                 arrowHead.setTranslateY(branchPtCursor.getY());
