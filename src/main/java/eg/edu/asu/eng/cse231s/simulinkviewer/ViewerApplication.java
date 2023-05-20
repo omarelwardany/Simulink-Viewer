@@ -90,6 +90,7 @@ public class ViewerApplication extends Application {
                     if ((block.getChildNodes().item(i)).getTextContent().matches(".*,.*,.*,.*") && block.getChildNodes().item(i).getParentNode().equals(block)) {  // direct child bug handled
                         position = block.getChildNodes().item(i).getTextContent();
                         System.out.println(position);
+                        break;
                     }
                 }
                 rectangle.setX(getXFromPosition(position));
@@ -105,6 +106,7 @@ public class ViewerApplication extends Application {
                 blockText.setY(getYFromPosition(position));
                 drawingPane.getChildren().add(blockText);
             }
+            else rectangles.add(null);
         }
         // add Lines to the drawingPane
         // iterate over line elements
@@ -136,18 +138,15 @@ public class ViewerApplication extends Application {
             // iterate over the child nodes of the line
             for (int i = 0; i < lineElement.getChildNodes().getLength(); i++) {
                 boolean usefulNode = false;
-                if (lineElement.getChildNodes().item(i).getParentNode().equals(lineElement)) { // direct child bug handled
+                if (lineElement.getChildNodes().item(i).getParentNode().equals(lineElement) && lineElement.getChildNodes().item(i).getNodeType() == Node.ELEMENT_NODE) { // direct child bug handled
                     // in case the Node is a P node
-                    if (lineElement.getChildNodes().item(i).getNodeType() == Node.TEXT_NODE) { // direct child bug handled
-                        org.w3c.dom.Text currentP = (org.w3c.dom.Text) lineElement.getChildNodes().item(i);  // direct child bug handled
+
+                    if (((Element )lineElement.getChildNodes().item(i)).getTagName().equals("P")) { // direct child bug handled
+                        Element currentP = (Element) lineElement.getChildNodes().item(i);  // direct child bug handled
 
                         // in case the node is Src
+                        // System.out.println(currentP.getFirstChild().getTextContent());
                         System.out.println(currentP.getTextContent());
-                        System.out.println(currentP.getWholeText());
-                        System.out.println(currentP.getPrefix());
-                        System.out.println(currentP.getData());
-                        System.out.println(currentP.isElementContentWhitespace());
-                        System.out.println(currentP.getNodeValue());
                         if (currentP.getTextContent().matches(".*#out:.*")) {
                             SrcID = Integer.parseInt(currentP.getTextContent().split("#")[0]);
                             Src.setX(rectangles.get(SrcID).getX() + startXDir * rectangles.get(SrcID).getWidth());
@@ -270,14 +269,18 @@ public class ViewerApplication extends Application {
         Document xmlDoc;
         try {
             File XML = stringToFile(XMLFile);
-            xmlDoc = db.parse(XML);
+            xmlDoc = db.parse(XML.getAbsolutePath());
+
+            xmlDoc.getDocumentElement().normalize();
+            NodeList toReturn = xmlDoc.getElementsByTagName(tagName);
+            System.out.println("toReturn = " + toReturn.getLength());
+            System.out.println("toReturn = " + toReturn.getLength());
+            return toReturn;
         } catch (SAXException e) {
             throw new RuntimeException(e);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        NodeList toReturn = xmlDoc.getElementsByTagName(tagName);
-        return toReturn;
     }
 
 
