@@ -1,12 +1,15 @@
 package eg.edu.asu.eng.cse231s.simulinkviewer;
 
 import javafx.application.Application;
+import javafx.geometry.Bounds;
 import javafx.scene.Scene;
 import javafx.scene.layout.Pane;
-import javafx.scene.layout.StackPane;
+import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.text.Font;
 import javafx.scene.text.Text;
+import javafx.scene.text.TextAlignment;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
@@ -34,7 +37,7 @@ public class ViewerApplication extends Application {
     @Override
     public void start(Stage stage) {
         // required declarations before initial scene event handler
-        Pane drawingPane = new StackPane();
+        Pane drawingPane = new Pane();
         String XMLFile;
         NodeList blockNodes;
         NodeList lineNodes;
@@ -97,13 +100,23 @@ public class ViewerApplication extends Application {
                 rectangle.setY(getYFromPosition(position));
                 rectangle.setHeight(getHeightFromPosition(position));
                 rectangle.setWidth(getWidthFromPosition(position));
+                rectangle.setFill(Color.WHITE);
+                rectangle.setStroke(Color.BLACK);
                 rectangles.add(rectangle);
                 drawingPane.getChildren().add(rectangle);
 
                 Text blockText = new Text();
-                blockText.setText(block.getTagName());
-                blockText.setX(getXFromPosition(position));
-                blockText.setY(getYFromPosition(position));
+                blockText.setText(block.getAttribute("Name"));
+                blockText.setX(getXFromPosition(position) + 0.5 * getWidthFromPosition(position));
+                blockText.setY(getYFromPosition(position) + getHeightFromPosition(position) + 20);
+                blockText.setTextAlignment(TextAlignment.CENTER);
+                blockText.setFont(new Font(10));
+
+                // Center the text at its location
+                Bounds bounds = blockText.getBoundsInLocal();
+                blockText.setX(blockText.getX() - bounds.getWidth() / 2);
+                blockText.setY(blockText.getY() - bounds.getHeight() / 2);
+
                 drawingPane.getChildren().add(blockText);
             }
             else rectangles.add(null);
@@ -162,14 +175,13 @@ public class ViewerApplication extends Application {
                             for (int j = 0; j < points.length; j++) {
                                 Line midLine = new Line();
                                 midLine.setStartX(ptCursor.getX());
-                                midLine.setStartY(ptCursor.getX());
+                                midLine.setStartY(ptCursor.getY());
                                 ptCursor = ptCursor.add(points[j]);
-                                midLine.setEndX(points[j].getX());
-                                midLine.setEndY(points[j].getY());
+                                midLine.setEndX(ptCursor.getX());
+                                midLine.setEndY(ptCursor.getY());
                                 drawingPane.getChildren().add(midLine);
                             }
                             branchPtCursor = new Point(ptCursor.getX(), ptCursor.getY());
-                            branchPtCursorExists = true;
                             usefulNode = true;
                         }
 
@@ -182,7 +194,7 @@ public class ViewerApplication extends Application {
                             Dst.setX(rectangles.get(DstID).getX() + endXDir * rectangles.get(DstID).getWidth());
                             Dst.setY(ptCursor.getY());
                             Line endLine = new Line();
-                            endLine.setStartY(ptCursor.getX());
+                            endLine.setStartX(ptCursor.getX());
                             endLine.setStartY(ptCursor.getY());
                             endLine.setEndX(Dst.getX());
                             endLine.setEndY(Dst.getY());
@@ -198,7 +210,7 @@ public class ViewerApplication extends Application {
                         Element branchElement = (Element) lineElement.getChildNodes().item(i);
                         Point branchDst = new Point();
                         int branchDstID;
-                        int branchEndXDir = 0; // end direction is is positive x (0) or negative x (1)
+                        int branchEndXDir = 0; // end direction is positive x (0) or negative x (1)
                         for (int j = 0; j < branchElement.getChildNodes().getLength(); j++) { // direct child bug not present
                             Node currentP = branchElement.getChildNodes().item(j);
 
@@ -220,10 +232,23 @@ public class ViewerApplication extends Application {
 
                             // in case the node is Dst
                             if (currentP.getTextContent().matches(".*#in:.*")) {
-
+                                DstID = Integer.parseInt(currentP.getTextContent().split("#")[0]);
+                                if (rectangles.get(DstID).getX() > ptCursor.getX()) {
+                                    endXDir = 0;
+                                } else endXDir = 1;
+                                Dst.setX(rectangles.get(DstID).getX() + endXDir * rectangles.get(DstID).getWidth());
+                                Dst.setY(ptCursor.getY());
+                                Line endLine = new Line();
+                                endLine.setStartX(branchPtCursor.getX());
+                                endLine.setStartY(branchPtCursor.getY());
+                                endLine.setEndX(Dst.getX());
+                                endLine.setEndY(branchPtCursor.getY());
+                                drawingPane.getChildren().add(endLine);
+                                // TODO: arrow heads
+                                usefulNode = true;
                             }
                         }
-                        usefulNode = true;
+                        // usefulNode = true;
                     }
                     // return the cursor to the branch base
                     if (usefulNode) {
@@ -237,9 +262,13 @@ public class ViewerApplication extends Application {
          *   for each block, get dimensions and position, then add to scene
          *   for each line, get source point and destination point, then add to scene*/
         Scene drawingScene = new Scene(drawingPane);
-        stage.setHeight(600);
-        stage.setWidth(1000);
+        stage.setHeight(550);
+        stage.setWidth(900);
         stage.setTitle("Viewing " + mdlFile.getName());
+        drawingScene.getRoot().setTranslateX(-700);
+        drawingScene.getRoot().setScaleX(2);
+        drawingScene.getRoot().setScaleY(2);
+        stage.setResizable(false);
         stage.setScene(drawingScene);
         stage.show();
     }
