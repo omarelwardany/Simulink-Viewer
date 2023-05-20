@@ -6,6 +6,7 @@ import javafx.scene.Scene;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
+import javafx.scene.shape.Polygon;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
@@ -45,6 +46,7 @@ public class ViewerApplication extends Application {
         List<Element> lines;
         String mdlPath;
         ArrayList<Rectangle> rectangles = new ArrayList<>();
+        double arrowHeadDimension = 4;
 
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Open MDL file");
@@ -199,7 +201,15 @@ public class ViewerApplication extends Application {
                             endLine.setEndX(Dst.getX());
                             endLine.setEndY(Dst.getY());
                             drawingPane.getChildren().add(endLine);
-                            // TODO: arrow heads
+                            Polygon arrowHead;
+                            if (endXDir == 0) {
+                                arrowHead = new Polygon(0, 0, -arrowHeadDimension * Math.sqrt(2), -arrowHeadDimension, -arrowHeadDimension * Math.sqrt(2), arrowHeadDimension);
+                            } else {
+                                arrowHead = new Polygon(0, 0, arrowHeadDimension * Math.sqrt(2), -arrowHeadDimension, arrowHeadDimension * Math.sqrt(2), arrowHeadDimension);
+                            }
+                            arrowHead.setTranslateX(Dst.getX());
+                            arrowHead.setTranslateY(branchPtCursor.getY());
+                            drawingPane.getChildren().add(arrowHead);
                             usefulNode = true;
                         }
                     }
@@ -244,7 +254,15 @@ public class ViewerApplication extends Application {
                                 endLine.setEndX(Dst.getX());
                                 endLine.setEndY(branchPtCursor.getY());
                                 drawingPane.getChildren().add(endLine);
-                                // TODO: arrow heads
+                                Polygon arrowHead;
+                                if (endXDir == 0) {
+                                    arrowHead = new Polygon(0, 0, -arrowHeadDimension * Math.sqrt(2), -arrowHeadDimension, -arrowHeadDimension * Math.sqrt(2), arrowHeadDimension);
+                                } else {
+                                    arrowHead = new Polygon(0, 0, arrowHeadDimension * Math.sqrt(2), -arrowHeadDimension, arrowHeadDimension * Math.sqrt(2), arrowHeadDimension);
+                                }
+                                arrowHead.setTranslateX(Dst.getX());
+                                arrowHead.setTranslateY(branchPtCursor.getY());
+                                drawingPane.getChildren().add(arrowHead);
                                 usefulNode = true;
                             }
                         }
