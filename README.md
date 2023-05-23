@@ -3,7 +3,7 @@
 Ain Shams University  
 Faculty of Engineering  
 CSE231s - Spring 2023  
-Course Project
+Advanced Programming - Course Project
 
 <h1 style="text-align: center;">Simulink-Viewer</h1>
 
